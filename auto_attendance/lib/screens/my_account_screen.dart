@@ -23,19 +23,110 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
 
   Future<void> _loadUserData() async {
     try {
-      final userId = _auth.currentUser!.uid;
+      print('🔵 MY ACCOUNT: Loading user data...');
+      final userId = _auth.currentUser?.uid;
+
+      if (userId == null) {
+        print('❌ MY ACCOUNT: No user logged in');
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      print('🔵 MY ACCOUNT: User ID = $userId');
       final userDoc = await _firestore.collection('users').doc(userId).get();
-      setState(() {
-        _userData = userDoc.data();
-        _isLoading = false;
-      });
+
+      if (userDoc.exists) {
+        print('✅ MY ACCOUNT: User document found');
+        print('🔵 MY ACCOUNT: Data = ${userDoc.data()}');
+        setState(() {
+          _userData = userDoc.data();
+          _isLoading = false;
+        });
+      } else {
+        print('❌ MY ACCOUNT: User document does not exist');
+        setState(() {
+          _isLoading = false;
+        });
+      }
     } catch (e) {
+      print('❌ MY ACCOUNT ERROR: $e');
       setState(() {
         _isLoading = false;
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error loading account: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  Future<void> _editName() async {
+    final controller = TextEditingController(
+      text: _userData?['name']?.toString() ?? '',
+    );
+
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Name'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Full Name',
+            border: OutlineInputBorder(),
+          ),
+          textCapitalization: TextCapitalization.words,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (newName != null && newName.trim().isNotEmpty) {
+      await _updateName(newName.trim());
+    }
+  }
+
+  Future<void> _updateName(String newName) async {
+    try {
+      print('🔵 MY ACCOUNT: Updating name to: $newName');
+      
+      final userId = _auth.currentUser?.uid;
+      if (userId == null) return;
+
+      await _firestore.collection('users').doc(userId).update({
+        'name': newName,
+      });
+
+      print('✅ MY ACCOUNT: Name updated successfully');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Name updated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+
+      // Reload data
+      _loadUserData();
+    } catch (e) {
+      print('❌ MY ACCOUNT: Error updating name: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
         );
       }
     }
@@ -49,6 +140,9 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
       );
     }
 
+    final currentName = _userData?['name']?.toString() ?? 'N/A';
+    final isNameMissing = currentName == 'N/A' || currentName.isEmpty;
+
     return Scaffold(
       appBar: AppBar(title: const Text('My Account')),
       body: Padding(
@@ -61,9 +155,48 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 32),
-            _buildInfoRow('Name:', _userData?['name'] ?? 'N/A'),
+            
+            // Name Row with Edit Button
+            Row(
+              children: [
+                Expanded(
+                  child: _buildInfoRow('Name:', currentName),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: _editName,
+                  tooltip: 'Edit Name',
+                ),
+              ],
+            ),
+            
+            // Warning if name is missing
+            if (isNameMissing) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange),
+                ),
+                child: Row(
+                  children: const [
+                    Icon(Icons.warning, color: Colors.orange),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Please set your name for attendance tracking',
+                        style: TextStyle(color: Colors.orange),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            
             const SizedBox(height: 16),
-            _buildInfoRow('Email:', _userData?['email'] ?? 'N/A'),
+            _buildInfoRow('Email:', _userData?['email']?.toString() ?? 'N/A'),
             const SizedBox(height: 16),
             _buildInfoRow(
               'Account Type:',
@@ -78,7 +211,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
             ),
             const SizedBox(height: 48),
             const Text(
-              'Edit profile and change password features coming soon!',
+              'Additional features coming soon!',
               style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
             ),
           ],

@@ -21,8 +21,14 @@ dependencies:
 # Image picker
   image_picker: ^1.0.7
 
+# api 
+  http: ^1.2.0
+
 # UI
   cupertino_icons: ^1.0.2
+
+#camera
+  camera: ^0.10.5+5
 
 
 dev_dependencies:
@@ -31,3 +37,4 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+

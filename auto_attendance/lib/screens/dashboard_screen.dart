@@ -15,7 +15,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _showSettings = false;
   String _userName = '';
   bool _isAdmin = false;
-  List<String> _classes = [];
+  List<Map<String, dynamic>> _classes = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -24,24 +25,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _loadUserData() async {
-    final userId = _auth.currentUser!.uid;
-    final userDoc = await _firestore.collection('users').doc(userId).get();
-    final userData = userDoc.data()!;
+    try {
+      final userId = _auth.currentUser!.uid;
+      final userDoc = await _firestore.collection('users').doc(userId).get();
+      final userData = userDoc.data()!;
 
-    setState(() {
-      _userName = userData['name'] ?? '';
-      _isAdmin = userData['isAdmin'] ?? false;
-      _classes = List<String>.from(userData['classes'] ?? []);
-    });
+      setState(() {
+        _userName = userData['name'] ?? '';
+        _isAdmin = userData['isAdmin'] ?? false;
+      });
 
-    // Load class names
-    if (_classes.isNotEmpty) {
-      await _loadClassNames();
+      final classIds = List<String>.from(userData['classes'] ?? []);
+
+      if (classIds.isNotEmpty) {
+        await _loadClassNames(classIds);
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading user data: $e');
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
-  Future<void> _loadClassNames() async {
-    // This will be populated when we implement class joining
+  Future<void> _loadClassNames(List<String> classIds) async {
+    try {
+      List<Map<String, dynamic>> loadedClasses = [];
+
+      for (String classId in classIds) {
+        final classDoc =
+            await _firestore.collection('classes').doc(classId).get();
+        if (classDoc.exists) {
+          loadedClasses.add({
+            'id': classId,
+            'name': classDoc.data()?['name'] ?? 'Unknown Class',
+            'code': classDoc.data()?['code'] ?? '',
+          });
+        }
+      }
+
+      setState(() {
+        _classes = loadedClasses;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading class names: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _signOut() async {
@@ -49,6 +85,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (mounted) {
       Navigator.pushReplacementNamed(context, '/login');
     }
+  }
+
+  void _openClass(Map<String, dynamic> classData) {
+    Navigator.pushNamed(
+      context,
+      '/class-detail',
+      arguments: {
+        'classId': classData['id'],
+        'className': classData['name'],
+        'isAdmin': _isAdmin,
+      },
+    );
   }
 
   @override
@@ -88,21 +136,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(height: 16),
                 Expanded(
-                  child: _classes.isEmpty
-                      ? const Center(
-                          child: Text(
-                              'No classes yet. Join a class to get started!'),
-                        )
-                      : ListView.builder(
-                          itemCount: _classes.length,
-                          itemBuilder: (context, index) {
-                            return Card(
-                              child: ListTile(
-                                title: Text(_classes[index]),
-                              ),
-                            );
-                          },
-                        ),
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _classes.isEmpty
+                          ? const Center(
+                              child: Text(
+                                  'No classes yet. Join a class to get started!'),
+                            )
+                          : ListView.builder(
+                              itemCount: _classes.length,
+                              itemBuilder: (context, index) {
+                                final classData = _classes[index];
+                                return Card(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  child: ListTile(
+                                    title: Text(
+                                      classData['name'],
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                        'Class Code: ${classData['code']}'),
+                                    trailing:
+                                        const Icon(Icons.arrow_forward_ios),
+                                    onTap: () => _openClass(classData),
+                                  ),
+                                );
+                              },
+                            ),
                 ),
               ],
             ),
