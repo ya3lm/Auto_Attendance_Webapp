@@ -57,7 +57,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading attendance: $e');
+      //print('Error loading attendance: $e');
       setState(() {
         _isLoading = false;
       });

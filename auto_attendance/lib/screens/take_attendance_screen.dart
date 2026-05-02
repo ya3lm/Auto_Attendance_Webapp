@@ -3,7 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:camera/camera.dart';
 import 'dart:async';
+//ignore_for_file: avoid_print
 import 'dart:typed_data';
+//rest of imports
 import '../services/face_recognition_api.dart';
 
 class TakeAttendanceScreen extends StatefulWidget {
@@ -21,8 +23,8 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
   bool _isRecognitionActive = false;
   Timer? _recognitionTimer;
 
-  Set<String> _markedPresentUserIds = {};
-  List<Map<String, dynamic>> _recognizedStudents = [];
+  final Set<String> _markedPresentUserIds = {};
+  final List<Map<String, dynamic>> _recognizedStudents = [];
 
   static const int recognitionIntervalSeconds = 2;
 
@@ -369,12 +371,12 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
                                 vertical: 8,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.8),
+                                color: Colors.red.withValues(alpha: 0.8),
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              child: Row(
+                              child: const Row(
                                 mainAxisSize: MainAxisSize.min,
-                                children: const [
+                                children: [
                                   Icon(
                                     Icons.fiber_manual_record,
                                     color: Colors.white,

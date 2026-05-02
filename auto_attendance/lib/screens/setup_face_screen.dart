@@ -26,11 +26,11 @@ class _SetupFaceScreenState extends State<SetupFaceScreen> {
   bool _isUploading = false;
 
   Future<void> _pickImage(String position) async {
-    print(' FACE SETUP: Picking image for $position');
+    //print(' FACE SETUP: Picking image for $position');
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
-      print(' FACE SETUP: Reading image bytes for $position');
+      //print(' FACE SETUP: Reading image bytes for $position');
       final bytes = await pickedFile.readAsBytes();
 
       setState(() {
@@ -49,16 +49,16 @@ class _SetupFaceScreenState extends State<SetupFaceScreen> {
             break;
         }
       });
-      print(' FACE SETUP: Image picked for $position (${bytes.length} bytes)');
+      //print(' FACE SETUP: Image picked for $position (${bytes.length} bytes)');
     } else {
-      print(' FACE SETUP: No image selected for $position');
+      //print(' FACE SETUP: No image selected for $position');
     }
   }
 
   Future<String?> _uploadImage(
       Uint8List imageBytes, String position, String fileName) async {
     try {
-      print(' FACE SETUP: Uploading $position image to Firebase Storage...');
+      //print(' FACE SETUP: Uploading $position image to Firebase Storage...');
       final userId = FirebaseAuth.instance.currentUser!.uid;
       final ref = FirebaseStorage.instance
           .ref()
@@ -70,28 +70,28 @@ class _SetupFaceScreenState extends State<SetupFaceScreen> {
       );
 
       final url = await uploadTask.ref.getDownloadURL();
-      print(' FACE SETUP: $position image uploaded to Firebase. URL: $url');
+      //print(' FACE SETUP: $position image uploaded to Firebase. URL: $url');
       return url;
     } catch (e) {
-      print(' FACE SETUP: Error uploading $position image to Firebase: $e');
+      //print(' FACE SETUP: Error uploading $position image to Firebase: $e');
       return null;
     }
   }
 
   Future<void> _submitFaceSetup() async {
-    print(' FACE SETUP: Submit button pressed');
+    //print(' FACE SETUP: Submit button pressed');
 
     if (_leftImageBytes == null ||
         _rightImageBytes == null ||
         _frontImageBytes == null) {
-      print(' FACE SETUP: Not all images selected');
+      //print(' FACE SETUP: Not all images selected');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please upload all 3 images')),
       );
       return;
     }
 
-    print(' FACE SETUP: All images selected');
+    //print(' FACE SETUP: All images selected');
     setState(() {
       _isUploading = true;
     });
@@ -100,13 +100,13 @@ class _SetupFaceScreenState extends State<SetupFaceScreen> {
       final userId = FirebaseAuth.instance.currentUser?.uid;
 
       if (userId == null) {
-        print(' FACE SETUP: No user logged in!');
+        //print(' FACE SETUP: No user logged in!');
         throw Exception('No user logged in');
       }
-      print(' FACE SETUP: User ID = $userId');
+      //print(' FACE SETUP: User ID = $userId');
 
       // Step 1: Upload to Firebase Storage
-      print(' FACE SETUP: Starting Firebase Storage uploads...');
+      //print(' FACE SETUP: Starting Firebase Storage uploads...');
       final leftUrl = await _uploadImage(
           _leftImageBytes!, 'left', _leftImageName ?? 'left.jpg');
       final rightUrl = await _uploadImage(
@@ -117,10 +117,10 @@ class _SetupFaceScreenState extends State<SetupFaceScreen> {
       if (leftUrl == null || rightUrl == null || frontUrl == null) {
         throw Exception('Failed to upload one or more images to Firebase');
       }
-      print(' FACE SETUP: All images uploaded to Firebase Storage');
+      //print(' FACE SETUP: All images uploaded to Firebase Storage');
 
       // Step 2: Register with Face Recognition API using Firebase URLs
-      print(' FACE SETUP: Registering faces with API using Firebase URLs...');
+      //print(' FACE SETUP: Registering faces with API using Firebase URLs...');
 
       final registered = await FaceRecognitionAPI.registerFaceFromUrls(
         uid: userId,
@@ -130,7 +130,7 @@ class _SetupFaceScreenState extends State<SetupFaceScreen> {
       );
 
       if (!registered) {
-        print(' FACE SETUP: Warning - Failed to register with API');
+        //print(' FACE SETUP: Warning - Failed to register with API');
         // Show warning but continue
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -143,11 +143,11 @@ class _SetupFaceScreenState extends State<SetupFaceScreen> {
           );
         }
       } else {
-        print(' FACE SETUP: Faces registered with API successfully');
+        //print(' FACE SETUP: Faces registered with API successfully');
       }
 
       // Step 3: Update Firestore user document
-      print(' FACE SETUP: Updating Firestore user document...');
+      //print(' FACE SETUP: Updating Firestore user document...');
       await FirebaseFirestore.instance.collection('users').doc(userId).set({
         'faceImages': {
           'left': leftUrl,
@@ -157,16 +157,16 @@ class _SetupFaceScreenState extends State<SetupFaceScreen> {
         'faceSetupComplete': true,
       }, SetOptions(merge: true));
 
-      print(' FACE SETUP: Firestore document updated');
+      //print(' FACE SETUP: Firestore document updated');
 
       if (mounted) {
-        print(' FACE SETUP: Navigating to setup complete screen...');
+        //print(' FACE SETUP: Navigating to setup complete screen...');
         Navigator.pushReplacementNamed(context, '/setup-complete');
-        print(' FACE SETUP: Navigation called');
+        //print(' FACE SETUP: Navigation called');
       }
     } catch (e) {
-      print(' FACE SETUP ERROR: $e');
-      print(' FACE SETUP ERROR TYPE: ${e.runtimeType}');
+      //print(' FACE SETUP ERROR: $e');
+      //print(' FACE SETUP ERROR TYPE: ${e.runtimeType}');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -204,8 +204,8 @@ class _SetupFaceScreenState extends State<SetupFaceScreen> {
             _buildImagePicker('Front View', _frontImageBytes, 'front'),
             const SizedBox(height: 48),
             _isUploading
-                ? Column(
-                    children: const [
+                ? const Column(
+                    children: [
                       CircularProgressIndicator(),
                       SizedBox(height: 16),
                       Text('Uploading and registering images...'),

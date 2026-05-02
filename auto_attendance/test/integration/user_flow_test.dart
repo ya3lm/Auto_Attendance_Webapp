@@ -105,7 +105,7 @@ void main() {
       expect(attendanceQuery.docs.length, 1);
       expect(attendanceQuery.docs.first.data()['status'], 'present');
 
-      print(' Complete student flow test passed');
+      //print(' Complete student flow test passed');
     });
 
     test('Complete admin flow - create class and take attendance', () async {
@@ -177,7 +177,7 @@ void main() {
 
       expect(attendanceQuery.docs.length, 1);
 
-      print(' Complete admin flow test passed');
+      //print(' Complete admin flow test passed');
     });
 
     test('Multiple students attendance in same class', () async {
@@ -229,7 +229,7 @@ void main() {
 
       expect(attendanceQuery.docs.length, 3);
 
-      print(' Multiple students attendance test passed');
+      //print(' Multiple students attendance test passed');
     });
 
     test('Student cannot be marked present twice in same session', () async {
@@ -269,7 +269,7 @@ void main() {
 
       expect(attendanceQuery.docs.length, 1);
 
-      print(' Duplicate prevention test passed');
+      //print(' Duplicate prevention test passed');
     });
   });
 }

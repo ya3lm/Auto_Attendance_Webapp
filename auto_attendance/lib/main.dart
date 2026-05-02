@@ -25,11 +25,11 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(AttendanceApp());
+  runApp(const AttendanceApp());
 }
 
 class AttendanceApp extends StatelessWidget {
-  AttendanceApp({super.key});
+  const AttendanceApp({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -45,7 +45,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         });
       }
     } catch (e) {
-      print('Error loading user data: $e');
+      //print('Error loading user data: $e');
       setState(() {
         _isLoading = false;
       });
@@ -73,7 +73,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading class names: $e');
+      //print('Error loading class names: $e');
       setState(() {
         _isLoading = false;
       });
@@ -181,7 +181,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 10,
                       spreadRadius: 2,
                     ),

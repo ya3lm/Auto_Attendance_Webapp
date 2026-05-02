@@ -23,35 +23,35 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
 
   Future<void> _loadUserData() async {
     try {
-      print(' MY ACCOUNT: Loading user data...');
+      //print(' MY ACCOUNT: Loading user data...');
       final userId = _auth.currentUser?.uid;
 
       if (userId == null) {
-        print(' MY ACCOUNT: No user logged in');
+        //print(' MY ACCOUNT: No user logged in');
         setState(() {
           _isLoading = false;
         });
         return;
       }
 
-      print(' MY ACCOUNT: User ID = $userId');
+      //print(' MY ACCOUNT: User ID = $userId');
       final userDoc = await _firestore.collection('users').doc(userId).get();
 
       if (userDoc.exists) {
-        print(' MY ACCOUNT: User document found');
-        print(' MY ACCOUNT: Data = ${userDoc.data()}');
+        //print(' MY ACCOUNT: User document found');
+        //print(' MY ACCOUNT: Data = ${userDoc.data()}');
         setState(() {
           _userData = userDoc.data();
           _isLoading = false;
         });
       } else {
-        print(' MY ACCOUNT: User document does not exist');
+        //print(' MY ACCOUNT: User document does not exist');
         setState(() {
           _isLoading = false;
         });
       }
     } catch (e) {
-      print(' MY ACCOUNT ERROR: $e');
+      //print(' MY ACCOUNT ERROR: $e');
       setState(() {
         _isLoading = false;
       });
@@ -100,7 +100,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
 
   Future<void> _updateName(String newName) async {
     try {
-      print(' MY ACCOUNT: Updating name to: $newName');
+      //print(' MY ACCOUNT: Updating name to: $newName');
 
       final userId = _auth.currentUser?.uid;
       if (userId == null) return;
@@ -109,7 +109,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
         'name': newName,
       });
 
-      print(' MY ACCOUNT: Name updated successfully');
+      //print(' MY ACCOUNT: Name updated successfully');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -123,7 +123,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
       // Reload data
       _loadUserData();
     } catch (e) {
-      print(' MY ACCOUNT: Error updating name: $e');
+      //print(' MY ACCOUNT: Error updating name: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),
@@ -180,8 +180,8 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.orange),
                 ),
-                child: Row(
-                  children: const [
+                child: const Row(
+                  children: [
                     Icon(Icons.warning, color: Colors.orange),
                     SizedBox(width: 12),
                     Expanded(

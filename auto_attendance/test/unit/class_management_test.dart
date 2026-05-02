@@ -26,7 +26,7 @@ void main() {
       // Arrange
       const adminUserId = 'admin123';
       const className = 'Computer Science 101';
-      final classCode = 12345;
+      const classCode = 12345;
 
       // Act
       final classRef = await mockFirestore.collection('classes').add({
@@ -77,11 +77,13 @@ void main() {
       });
 
       // Assert - Verify student is in class
-      final classDoc = await mockFirestore.collection('classes').doc(classId).get();
+      final classDoc =
+          await mockFirestore.collection('classes').doc(classId).get();
       expect(classDoc.data()!['students'], contains(studentUserId));
 
       // Assert - Verify class is in student's classes
-      final studentDoc = await mockFirestore.collection('users').doc(studentUserId).get();
+      final studentDoc =
+          await mockFirestore.collection('users').doc(studentUserId).get();
       expect(studentDoc.data()!['classes'], contains(classId));
     });
 
@@ -112,7 +114,8 @@ void main() {
       });
 
       // Act - Try to add student again
-      final classDoc = await mockFirestore.collection('classes').doc(classId).get();
+      final classDoc =
+          await mockFirestore.collection('classes').doc(classId).get();
       final currentStudents = List<String>.from(classDoc.data()!['students']);
 
       // Check if already enrolled
@@ -174,7 +177,8 @@ void main() {
       });
 
       // Assert
-      final studentDoc = await mockFirestore.collection('users').doc(studentUserId).get();
+      final studentDoc =
+          await mockFirestore.collection('users').doc(studentUserId).get();
       expect(studentDoc.data()!['classes'], hasLength(2));
       expect(studentDoc.data()!['classes'], contains(class1Ref.id));
       expect(studentDoc.data()!['classes'], contains(class2Ref.id));

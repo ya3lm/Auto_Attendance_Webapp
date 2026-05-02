@@ -38,22 +38,22 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
-      print(' SIGNUP: Starting signup process...');
-      print(' SIGNUP: Name = ${_nameController.text}');
-      print(' SIGNUP: Email = ${_emailController.text}');
+      //print(' SIGNUP: Starting signup process...');
+      //print(' SIGNUP: Name = ${_nameController.text}');
+      //print(' SIGNUP: Email = ${_emailController.text}');
 
       // Create user in Firebase Auth
-      print(' SIGNUP: Creating Firebase Auth user...');
+      //print(' SIGNUP: Creating Firebase Auth user...');
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
 
       final userId = userCredential.user!.uid;
-      print(' SIGNUP: Auth user created with ID: $userId');
+      //print(' SIGNUP: Auth user created with ID: $userId');
 
       // Create user document in Firestore
-      print(' SIGNUP: Creating Firestore user document...');
+      //print(' SIGNUP: Creating Firestore user document...');
       final userData = {
         'name': _nameController.text.trim(),
         'email': _emailController.text.trim(),
@@ -63,27 +63,27 @@ class _SignupScreenState extends State<SignupScreen> {
         'createdAt': FieldValue.serverTimestamp(),
       };
 
-      print(' SIGNUP: User data to save: $userData');
+      //print(' SIGNUP: User data to save: $userData');
 
       await _firestore.collection('users').doc(userId).set(userData);
 
-      print(' SIGNUP: Firestore document created successfully');
+      //print(' SIGNUP: Firestore document created successfully');
 
       // Verify the document was created
-      print(' SIGNUP: Verifying document...');
+      //print(' SIGNUP: Verifying document...');
       final doc = await _firestore.collection('users').doc(userId).get();
       if (doc.exists) {
-        print(' SIGNUP: Document verified. Data: ${doc.data()}');
+        //print(' SIGNUP: Document verified. Data: ${doc.data()}');
       } else {
-        print(' SIGNUP: Warning - Document not found after creation!');
+        //print(' SIGNUP: Warning - Document not found after creation!');
       }
 
       if (mounted) {
-        print(' SIGNUP: Navigating to terms screen...');
+        //print(' SIGNUP: Navigating to terms screen...');
         Navigator.pushReplacementNamed(context, '/terms');
       }
     } on FirebaseAuthException catch (e) {
-      print(' SIGNUP AUTH ERROR: ${e.code} - ${e.message}');
+      //print(' SIGNUP AUTH ERROR: ${e.code} - ${e.message}');
 
       String message = 'Signup failed';
       if (e.code == 'weak-password') {
@@ -100,7 +100,7 @@ class _SignupScreenState extends State<SignupScreen> {
         );
       }
     } catch (e) {
-      print(' SIGNUP ERROR: $e');
+      //print(' SIGNUP ERROR: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),

@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('Login Screen Widget Tests', () {
-    
-    testWidgets('Login screen displays email and password fields', (WidgetTester tester) async {
+    testWidgets('Login screen displays email and password fields',
+        (WidgetTester tester) async {
       // Build the login screen widget
       await tester.pumpWidget(
         const MaterialApp(
@@ -14,7 +14,10 @@ void main() {
               children: [
                 TextField(key: Key('email_field')),
                 TextField(key: Key('password_field')),
-                ElevatedButton(key: Key('login_button'), onPressed: null, child: Text('Login')),
+                ElevatedButton(
+                    key: Key('login_button'),
+                    onPressed: null,
+                    child: Text('Login')),
               ],
             ),
           ),
@@ -23,27 +26,28 @@ void main() {
 
       // Verify that email field exists
       expect(find.byKey(const Key('email_field')), findsOneWidget);
-      
+
       // Verify that password field exists
       expect(find.byKey(const Key('password_field')), findsOneWidget);
-      
+
       // Verify that login button exists
       expect(find.byKey(const Key('login_button')), findsOneWidget);
     });
 
-    testWidgets('Login button is disabled when fields are empty', (WidgetTester tester) async {
+    testWidgets('Login button is disabled when fields are empty',
+        (WidgetTester tester) async {
       // Build widget
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Column(
               children: [
-                const TextField(key: Key('email_field')),
-                const TextField(key: Key('password_field')),
+                TextField(key: Key('email_field')),
+                TextField(key: Key('password_field')),
                 ElevatedButton(
-                  key: const Key('login_button'),
+                  key: Key('login_button'),
                   onPressed: null, // Disabled
-                  child: const Text('Login'),
+                  child: Text('Login'),
                 ),
               ],
             ),
@@ -104,8 +108,8 @@ void main() {
   });
 
   group('Signup Screen Widget Tests', () {
-    
-    testWidgets('Signup screen displays all required fields', (WidgetTester tester) async {
+    testWidgets('Signup screen displays all required fields',
+        (WidgetTester tester) async {
       // Build widget
       await tester.pumpWidget(
         const MaterialApp(
@@ -116,7 +120,10 @@ void main() {
                 TextField(key: Key('email_field')),
                 TextField(key: Key('password_field')),
                 TextField(key: Key('confirm_password_field')),
-                ElevatedButton(key: Key('signup_button'), onPressed: null, child: Text('Sign Up')),
+                ElevatedButton(
+                    key: Key('signup_button'),
+                    onPressed: null,
+                    child: Text('Sign Up')),
               ],
             ),
           ),
@@ -150,7 +157,6 @@ void main() {
   });
 
   group('Dashboard Widget Tests', () {
-    
     testWidgets('Dashboard displays user name', (WidgetTester tester) async {
       const userName = 'Test User';
 
@@ -165,7 +171,8 @@ void main() {
       expect(find.text('Welcome $userName'), findsOneWidget);
     });
 
-    testWidgets('Dashboard displays settings button', (WidgetTester tester) async {
+    testWidgets('Dashboard displays settings button',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -186,7 +193,8 @@ void main() {
       expect(find.byIcon(Icons.settings), findsOneWidget);
     });
 
-    testWidgets('Tapping settings button shows menu', (WidgetTester tester) async {
+    testWidgets('Tapping settings button shows menu',
+        (WidgetTester tester) async {
       bool menuVisible = false;
 
       await tester.pumpWidget(
@@ -232,8 +240,8 @@ void main() {
   });
 
   group('Class List Widget Tests', () {
-    
-    testWidgets('Empty class list shows appropriate message', (WidgetTester tester) async {
+    testWidgets('Empty class list shows appropriate message',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -244,7 +252,8 @@ void main() {
         ),
       );
 
-      expect(find.text('No classes yet. Join a class to get started!'), findsOneWidget);
+      expect(find.text('No classes yet. Join a class to get started!'),
+          findsOneWidget);
     });
 
     testWidgets('Class list displays class cards', (WidgetTester tester) async {
@@ -280,8 +289,8 @@ void main() {
   });
 
   group('Take Attendance Widget Tests', () {
-    
-    testWidgets('Take attendance shows camera preview placeholder', (WidgetTester tester) async {
+    testWidgets('Take attendance shows camera preview placeholder',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -299,7 +308,8 @@ void main() {
       expect(find.byKey(const Key('camera_preview')), findsOneWidget);
     });
 
-    testWidgets('Start button is displayed when not recognizing', (WidgetTester tester) async {
+    testWidgets('Start button is displayed when not recognizing',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -316,7 +326,8 @@ void main() {
       expect(find.text('Start Taking Attendance'), findsOneWidget);
     });
 
-    testWidgets('Student counter displays correct count', (WidgetTester tester) async {
+    testWidgets('Student counter displays correct count',
+        (WidgetTester tester) async {
       const studentCount = 5;
 
       await tester.pumpWidget(
