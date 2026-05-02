@@ -87,8 +87,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  void _openClass(Map<String, dynamic> classData) {
-    Navigator.pushNamed(
+  void _openClass(Map<String, dynamic> classData) async {
+    await Navigator.pushNamed(
       context,
       '/class-detail',
       arguments: {
@@ -97,6 +97,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         'isAdmin': _isAdmin,
       },
     );
+    _loadUserData(); // Refresh data when returning
   }
 
   @override
@@ -209,7 +210,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     _buildMenuItem(
                       'Join Class',
                       Icons.class_,
-                      () => Navigator.pushNamed(context, '/join-class'),
+                      () async {
+                        await Navigator.pushNamed(context, '/join-class');
+                        //reload classes after returning
+                        _loadUserData();
+                      },
                     ),
                     _buildMenuItem(
                       'Sign Out',

@@ -31,10 +31,18 @@ dependencies:
   camera: ^0.10.5+5
 
 
+#testing
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
+  flutter_lints: ^2.0.0
+  
+  # Testing packages - compatible with Firebase 3.x:
+  mockito: ^5.4.4
+  build_runner: ^2.4.6
+  fake_cloud_firestore: ^3.0.1  # ← Updated version
+  firebase_auth_mocks: ^0.14.1  # ← Updated version
+  
 flutter:
   uses-material-design: true
 

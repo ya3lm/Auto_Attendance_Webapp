@@ -15,10 +15,10 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
-  
+
   bool _isLoading = false;
 
   Future<void> _signup() async {
@@ -38,22 +38,22 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
-      print('🔵 SIGNUP: Starting signup process...');
-      print('🔵 SIGNUP: Name = ${_nameController.text}');
-      print('🔵 SIGNUP: Email = ${_emailController.text}');
-      
+      print(' SIGNUP: Starting signup process...');
+      print(' SIGNUP: Name = ${_nameController.text}');
+      print(' SIGNUP: Email = ${_emailController.text}');
+
       // Create user in Firebase Auth
-      print('🔵 SIGNUP: Creating Firebase Auth user...');
+      print(' SIGNUP: Creating Firebase Auth user...');
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
 
       final userId = userCredential.user!.uid;
-      print('✅ SIGNUP: Auth user created with ID: $userId');
+      print(' SIGNUP: Auth user created with ID: $userId');
 
       // Create user document in Firestore
-      print('🔵 SIGNUP: Creating Firestore user document...');
+      print(' SIGNUP: Creating Firestore user document...');
       final userData = {
         'name': _nameController.text.trim(),
         'email': _emailController.text.trim(),
@@ -62,29 +62,29 @@ class _SignupScreenState extends State<SignupScreen> {
         'classes': [],
         'createdAt': FieldValue.serverTimestamp(),
       };
-      
-      print('🔵 SIGNUP: User data to save: $userData');
-      
+
+      print(' SIGNUP: User data to save: $userData');
+
       await _firestore.collection('users').doc(userId).set(userData);
-      
-      print('✅ SIGNUP: Firestore document created successfully');
-      
+
+      print(' SIGNUP: Firestore document created successfully');
+
       // Verify the document was created
-      print('🔵 SIGNUP: Verifying document...');
+      print(' SIGNUP: Verifying document...');
       final doc = await _firestore.collection('users').doc(userId).get();
       if (doc.exists) {
-        print('✅ SIGNUP: Document verified. Data: ${doc.data()}');
+        print(' SIGNUP: Document verified. Data: ${doc.data()}');
       } else {
-        print('❌ SIGNUP: Warning - Document not found after creation!');
+        print(' SIGNUP: Warning - Document not found after creation!');
       }
 
       if (mounted) {
-        print('🔵 SIGNUP: Navigating to terms screen...');
+        print(' SIGNUP: Navigating to terms screen...');
         Navigator.pushReplacementNamed(context, '/terms');
       }
     } on FirebaseAuthException catch (e) {
-      print('❌ SIGNUP AUTH ERROR: ${e.code} - ${e.message}');
-      
+      print(' SIGNUP AUTH ERROR: ${e.code} - ${e.message}');
+
       String message = 'Signup failed';
       if (e.code == 'weak-password') {
         message = 'Password is too weak';
@@ -93,14 +93,14 @@ class _SignupScreenState extends State<SignupScreen> {
       } else if (e.code == 'invalid-email') {
         message = 'Invalid email address';
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
       }
     } catch (e) {
-      print('❌ SIGNUP ERROR: $e');
+      print(' SIGNUP ERROR: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),
@@ -144,7 +144,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                
+
                 // Name Field
                 TextFormField(
                   controller: _nameController,
@@ -165,7 +165,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   textCapitalization: TextCapitalization.words,
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Email Field
                 TextFormField(
                   controller: _emailController,
@@ -186,7 +186,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Password Field
                 TextFormField(
                   controller: _passwordController,
@@ -207,7 +207,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Confirm Password Field
                 TextFormField(
                   controller: _confirmPasswordController,
@@ -225,7 +225,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   },
                 ),
                 const SizedBox(height: 32),
-                
+
                 // Sign Up Button
                 _isLoading
                     ? const CircularProgressIndicator()
@@ -237,7 +237,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         child: const Text('Sign Up'),
                       ),
                 const SizedBox(height: 16),
-                
+
                 // Login Link
                 TextButton(
                   onPressed: () {

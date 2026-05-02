@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 class FaceRecognitionAPI {
   // Change this to your computer's IP address when running FastAPI
-  static const String baseUrl = "http://129.113.225.39:8000";
+  static const String baseUrl = "http://129.113.225.72:8000";
 
   // Alternative: Use your computer's local IP if testing on phone
   // static const String baseUrl = "http://192.168.1.XXX:8000";
@@ -22,7 +22,7 @@ class FaceRecognitionAPI {
     required String frontUrl,
   }) async {
     try {
-      print('🔵 API: Registering face from Firebase URLs for user $uid');
+      print(' API: Registering face from Firebase URLs for user $uid');
 
       final response = await http.post(
         Uri.parse('$baseUrl/register-from-urls'),
@@ -35,25 +35,25 @@ class FaceRecognitionAPI {
         },
       );
 
-      print('🔵 API Response Status: ${response.statusCode}');
-      print('🔵 API Response: ${response.body}');
+      print(' API Response Status: ${response.statusCode}');
+      print(' API Response: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['status'] == 'success') {
           print(
-              '✅ API: Face registered successfully (${data['downloaded']}/3 images)');
+              ' API: Face registered successfully (${data['downloaded']}/3 images)');
           return true;
         } else {
-          print('❌ API: Registration failed - ${data['message']}');
+          print(' API: Registration failed - ${data['message']}');
           return false;
         }
       } else {
-        print('❌ API: Registration failed with status ${response.statusCode}');
+        print(' API: Registration failed with status ${response.statusCode}');
         return false;
       }
     } catch (e) {
-      print('❌ API ERROR: $e');
+      print(' API ERROR: $e');
       return false;
     }
   }
@@ -69,7 +69,7 @@ class FaceRecognitionAPI {
     required String fileName,
   }) async {
     try {
-      print('🔵 API: Registering face for user $uid');
+      print(' API: Registering face for user $uid');
 
       var request = http.MultipartRequest(
         'POST',
@@ -88,17 +88,17 @@ class FaceRecognitionAPI {
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
 
-      print('🔵 API Response: $responseBody');
+      print(' API Response: $responseBody');
 
       if (response.statusCode == 200) {
-        print('✅ API: Face registered successfully');
+        print(' API: Face registered successfully');
         return true;
       } else {
-        print('❌ API: Registration failed with status ${response.statusCode}');
+        print(' API: Registration failed with status ${response.statusCode}');
         return false;
       }
     } catch (e) {
-      print('❌ API ERROR: $e');
+      print(' API ERROR: $e');
       return false;
     }
   }
@@ -109,7 +109,7 @@ class FaceRecognitionAPI {
   /// Returns the recognized user ID or null if not recognized
   static Future<String?> recognizeFace(Uint8List imageBytes) async {
     try {
-      print('🔵 API: Recognizing face...');
+      print(' API: Recognizing face...');
 
       var request = http.MultipartRequest(
         'POST',
@@ -128,17 +128,17 @@ class FaceRecognitionAPI {
       final responseBody = await response.stream.bytesToString();
       final data = jsonDecode(responseBody);
 
-      print('🔵 API Response: $data');
+      print(' API Response: $data');
 
       if (data['recognized'] == true && data['uid'] != null) {
-        print('✅ API: Face recognized as ${data['uid']}');
+        print(' API: Face recognized as ${data['uid']}');
         return data['uid'];
       } else {
-        print('❌ API: No face recognized');
+        print(' API: No face recognized');
         return null;
       }
     } catch (e) {
-      print('❌ API ERROR: $e');
+      print(' API ERROR: $e');
       return null;
     }
   }
@@ -146,19 +146,19 @@ class FaceRecognitionAPI {
   /// Test if the API is running
   static Future<bool> testConnection() async {
     try {
-      print('🔵 API: Testing connection to $baseUrl');
+      print(' API: Testing connection to $baseUrl');
       final response = await http.get(Uri.parse(baseUrl));
 
       if (response.statusCode == 200) {
-        print('✅ API: Connection successful');
+        print(' API: Connection successful');
         print('Response: ${response.body}');
         return true;
       } else {
-        print('❌ API: Connection failed with status ${response.statusCode}');
+        print(' API: Connection failed with status ${response.statusCode}');
         return false;
       }
     } catch (e) {
-      print('❌ API: Cannot connect - $e');
+      print(' API: Cannot connect - $e');
       return false;
     }
   }
@@ -166,19 +166,19 @@ class FaceRecognitionAPI {
   /// Get list of registered users from API (for debugging)
   static Future<Map<String, dynamic>?> getRegisteredUsers() async {
     try {
-      print('🔵 API: Getting registered users...');
+      print(' API: Getting registered users...');
       final response = await http.get(Uri.parse('$baseUrl/registered-users'));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print('✅ API: ${data['total_users']} users registered');
+        print(' API: ${data['total_users']} users registered');
         return data;
       } else {
-        print('❌ API: Failed to get users');
+        print(' API: Failed to get users');
         return null;
       }
     } catch (e) {
-      print('❌ API ERROR: $e');
+      print(' API ERROR: $e');
       return null;
     }
   }
