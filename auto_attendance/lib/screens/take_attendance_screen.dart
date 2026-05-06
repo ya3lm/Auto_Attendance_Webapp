@@ -7,6 +7,7 @@ import 'dart:async';
 import 'dart:typed_data';
 //rest of imports
 import '../services/face_recognition_api.dart';
+import 'dart:io';
 
 class TakeAttendanceScreen extends StatefulWidget {
   const TakeAttendanceScreen({super.key});
@@ -18,7 +19,7 @@ class TakeAttendanceScreen extends StatefulWidget {
 class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
   final _firestore = FirebaseFirestore.instance;
 
-  CameraController? _cameraController;
+  //CameraController? _cameraController;
   bool _isCameraInitialized = false;
   bool _isRecognitionActive = false;
   Timer? _recognitionTimer;
@@ -34,37 +35,58 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
     _initializeCamera();
   }
 
+  //commented out code for camera so I can test raspberry pi module
   Future<void> _initializeCamera() async {
     try {
-      print(' CAMERA: Initializing...');
+      //print(' CAMERA: Initializing...');
 
-      final cameras = await availableCameras();
+      //final cameras = await availableCameras();
+      final checkResult = await Process.run('vcgencmd', ['get_camera']);
 
-      if (cameras.isEmpty) {
-        print(' CAMERA: No cameras found');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No camera available on this device')),
-          );
-        }
-        return;
+      print(' CAMERA: Status - ${checkResult.stdout}');
+
+      //     if (cameras.isEmpty) {
+      //       print(' CAMERA: No cameras found');
+      //       if (mounted) {
+      //         ScaffoldMessenger.of(context).showSnackBar(
+      //           const SnackBar(content: Text('No camera available on this device')),
+      //         );
+      //       }
+      //       return;
+      //     }
+
+      //     final camera = cameras.first;
+
+      //     _cameraController = CameraController(
+      //       camera,
+      //       ResolutionPreset.medium,
+      //       enableAudio: false,
+      //     );
+
+      //     await _cameraController!.initialize();
+
+      //     setState(() {
+      //       _isCameraInitialized = true;
+      //     });
+
+      //     print('CAMERA: Initialized successfully');
+      //   } catch (e) {
+      //     print(' CAMERA ERROR: $e');
+      //     if (mounted) {
+      //       ScaffoldMessenger.of(context).showSnackBar(
+      //         SnackBar(content: Text('Camera error: ${e.toString()}')),
+      //       );
+      //     }
+      //   }
+      // }
+      if (checkResult.stdout.toString().contains('detected=1')) {
+        setState(() {
+          _isCameraInitialized = true;
+        });
+        print(' CAMERA: Raspberry Pi camera detected and ready');
+      } else {
+        throw Exception('Camera not detected');
       }
-
-      final camera = cameras.first;
-
-      _cameraController = CameraController(
-        camera,
-        ResolutionPreset.medium,
-        enableAudio: false,
-      );
-
-      await _cameraController!.initialize();
-
-      setState(() {
-        _isCameraInitialized = true;
-      });
-
-      print('CAMERA: Initialized successfully');
     } catch (e) {
       print(' CAMERA ERROR: $e');
       if (mounted) {
@@ -76,7 +98,8 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
   }
 
   void _startRecognition(String classId) {
-    if (!_isCameraInitialized || _cameraController == null) {
+    //if (!_isCameraInitialized || _cameraController == null) { //no camera controller to check anymore
+    if (!_isCameraInitialized) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Camera not ready')),
       );
@@ -137,7 +160,8 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
   }
 
   Future<void> _recognizeFace(String classId) async {
-    if (_cameraController == null || !_cameraController!.value.isInitialized) {
+    //if (_cameraController == null || !_cameraController!.value.isInitialized) { //no camera controller to check anymore
+    if (!_isCameraInitialized) {
       print(' ATTENDANCE: Camera not initialized, skipping frame');
       return;
     }
@@ -146,8 +170,41 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
       print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       print(' ATTENDANCE: Capturing frame for recognition...');
 
-      final image = await _cameraController!.takePicture();
-      final bytes = await image.readAsBytes();
+      //final image = await _cameraController!.takePicture();
+      //final bytes = await image.readAsBytes();
+      // Capture image using raspistill command
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final imagePath = '/tmp/capture_$timestamp.jpg';
+
+      print(' CAMERA: Capturing image to $imagePath...');
+
+      final captureResult = await Process.run('raspistill', [
+        '-o', imagePath, // Output file
+        '-w', '640', // Width
+        '-h', '480', // Height
+        '-t', '1', // Timeout 1ms (instant)
+        '-n', // No preview
+        '-q', '75', // Quality 75%
+      ]);
+
+      if (captureResult.exitCode != 0) {
+        print(' CAMERA: Capture failed - ${captureResult.stderr}');
+        return;
+      }
+
+      print(' CAMERA: Image captured successfully');
+
+      // Read the captured image
+      final imageFile = File(imagePath);
+      if (!await imageFile.exists()) {
+        print(' CAMERA: Image file not found');
+        return;
+      }
+
+      final bytes = await imageFile.readAsBytes();
+
+      // Clean up - delete temp file
+      await imageFile.delete();
 
       print(' ATTENDANCE: Frame captured (${bytes.length} bytes)');
       print(' ATTENDANCE: Sending frame to API...');
@@ -259,7 +316,7 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
           print(
               ' ATTENDANCE: UI updated. Total students: ${_recognizedStudents.length}');
 
-          print('🎉 ATTENDANCE: SUCCESS - $studentName marked present!');
+          print(' ATTENDANCE: SUCCESS - $studentName marked present!');
           print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
           if (mounted) {
@@ -319,7 +376,7 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
   @override
   void dispose() {
     _recognitionTimer?.cancel();
-    _cameraController?.dispose();
+    //_cameraController?.dispose();     //no camera controller to dispose
     super.dispose();
   }
 
@@ -360,7 +417,27 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
                   ? Stack(
                       fit: StackFit.expand,
                       children: [
-                        CameraPreview(_cameraController!),
+                        //CameraPreview(_cameraController!),
+                        const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.camera_alt,
+                                  size: 100, color: Colors.white54),
+                              SizedBox(height: 16),
+                              Text(
+                                'Pi Camera Active',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 18),
+                              ),
+                              Text(
+                                'No preview available',
+                                style: TextStyle(
+                                    color: Colors.white70, fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
                         if (_isRecognitionActive)
                           Positioned(
                             top: 16,
