@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-//import 'package:camera/camera.dart';
+import 'package:camera/camera.dart';
 import 'dart:async';
 //ignore_for_file: avoid_print
 import 'dart:typed_data';
@@ -19,7 +19,7 @@ class TakeAttendanceScreen extends StatefulWidget {
 class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
   final _firestore = FirebaseFirestore.instance;
 
-  //CameraController? _cameraController;
+  CameraController? _cameraController;
   bool _isCameraInitialized = false;
   bool _isRecognitionActive = false;
   Timer? _recognitionTimer;
@@ -37,42 +37,47 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
 
   Future<void> _initializeCamera() async {
     try {
-      print(' CAMERA: Checking MJPEG stream...');
+      print(' CAMERA: Initializing...');
 
-      // Test if stream is accessible
-      final response = await http
-          .get(
-            Uri.parse('http://129.113.225.72:8080/?action=snapshot'),
-          )
-          .timeout(const Duration(seconds: 5));
+      final cameras = await availableCameras();
 
-      if (response.statusCode == 200) {
-        setState(() {
-          _isCameraInitialized = true;
-        });
-        print(' CAMERA: MJPEG stream detected and ready');
-      } else {
-        throw Exception('Stream returned status ${response.statusCode}');
+      if (cameras.isEmpty) {
+        print(' CAMERA: No cameras found');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No camera available on this device')),
+          );
+        }
+        return;
       }
+
+      final camera = cameras.first;
+
+      _cameraController = CameraController(
+        camera,
+        ResolutionPreset.medium,
+        enableAudio: false,
+      );
+
+      await _cameraController!.initialize();
+
+      setState(() {
+        _isCameraInitialized = true;
+      });
+
+      print('CAMERA: Initialized successfully');
     } catch (e) {
       print(' CAMERA ERROR: $e');
-      print(' Make sure camera stream is running:');
-      print(
-          '   mjpg_streamer -i "input_raspicam.so -fps 15 -q 50 -x 640 -y 480" -o "output_http.so -p 8080"');
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Camera stream not available: ${e.toString()}'),
-            duration: const Duration(seconds: 5),
-          ),
+          SnackBar(content: Text('Camera error: ${e.toString()}')),
         );
       }
     }
   }
 
   void _startRecognition(String classId) {
-    if (!_isCameraInitialized) {
+    if (!_isCameraInitialized || _cameraController == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Camera not ready')),
       );
@@ -133,28 +138,17 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
   }
 
   Future<void> _recognizeFace(String classId) async {
-    if (!_isCameraInitialized) {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
       print(' ATTENDANCE: Camera not initialized, skipping frame');
       return;
     }
 
     try {
       print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      print(' ATTENDANCE: Capturing frame from MJPEG stream...');
+      print(' ATTENDANCE: Capturing frame for recognition...');
 
-      // Capture snapshot from stream
-      final response = await http
-          .get(
-            Uri.parse('http://129.113.225.72:8080/?action=snapshot'),
-          )
-          .timeout(const Duration(seconds: 3));
-
-      if (response.statusCode != 200) {
-        print(' CAMERA: Failed to capture - status ${response.statusCode}');
-        return;
-      }
-
-      final bytes = response.bodyBytes;
+      final image = await _cameraController!.takePicture();
+      final bytes = await image.readAsBytes();
       print(' CAMERA: Frame captured (${bytes.length} bytes)');
       print(' ATTENDANCE: Sending frame to API...');
 
@@ -325,7 +319,7 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
   @override
   void dispose() {
     _recognitionTimer?.cancel();
-    // _cameraController?.dispose();
+    _cameraController?.dispose();
     super.dispose();
   }
 
@@ -366,40 +360,7 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
                   ? Stack(
                       fit: StackFit.expand,
                       children: [
-                        Image.network(
-                          'http://129.113.225.72:8080/?action=stream',
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stack) {
-                            return const Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.videocam_off,
-                                      color: Colors.red, size: 80),
-                                  SizedBox(height: 16),
-                                  Text(
-                                    'Camera Stream Unavailable',
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 18),
-                                  ),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    'Start mjpeg-streamer on Pi',
-                                    style: TextStyle(
-                                        color: Colors.white70, fontSize: 14),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return const Center(
-                              child: CircularProgressIndicator(
-                                  color: Colors.white),
-                            );
-                          },
-                        ),
+                        CameraPreview(_cameraController!),
                         if (_isRecognitionActive)
                           Positioned(
                             top: 16,
