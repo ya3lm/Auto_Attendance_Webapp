@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:camera/camera.dart';
+//import 'package:camera/camera.dart';
 import 'dart:async';
 //ignore_for_file: avoid_print
 import 'dart:typed_data';
 //rest of imports
 import '../services/face_recognition_api.dart';
-import 'dart:io';
+import 'package:http/http.dart' as http;
 
 class TakeAttendanceScreen extends StatefulWidget {
   const TakeAttendanceScreen({super.key});
@@ -35,70 +35,43 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
     _initializeCamera();
   }
 
-  //commented out code for camera so I can test raspberry pi module
   Future<void> _initializeCamera() async {
     try {
-      //print(' CAMERA: Initializing...');
+      print(' CAMERA: Checking MJPEG stream...');
 
-      //final cameras = await availableCameras();
-      final checkResult = await Process.run('vcgencmd', ['get_camera']);
+      // Test if stream is accessible
+      final response = await http
+          .get(
+            Uri.parse('http://129.113.225.72:8080/?action=snapshot'),
+          )
+          .timeout(const Duration(seconds: 5));
 
-      print(' CAMERA: Status - ${checkResult.stdout}');
-
-      //     if (cameras.isEmpty) {
-      //       print(' CAMERA: No cameras found');
-      //       if (mounted) {
-      //         ScaffoldMessenger.of(context).showSnackBar(
-      //           const SnackBar(content: Text('No camera available on this device')),
-      //         );
-      //       }
-      //       return;
-      //     }
-
-      //     final camera = cameras.first;
-
-      //     _cameraController = CameraController(
-      //       camera,
-      //       ResolutionPreset.medium,
-      //       enableAudio: false,
-      //     );
-
-      //     await _cameraController!.initialize();
-
-      //     setState(() {
-      //       _isCameraInitialized = true;
-      //     });
-
-      //     print('CAMERA: Initialized successfully');
-      //   } catch (e) {
-      //     print(' CAMERA ERROR: $e');
-      //     if (mounted) {
-      //       ScaffoldMessenger.of(context).showSnackBar(
-      //         SnackBar(content: Text('Camera error: ${e.toString()}')),
-      //       );
-      //     }
-      //   }
-      // }
-      if (checkResult.stdout.toString().contains('detected=1')) {
+      if (response.statusCode == 200) {
         setState(() {
           _isCameraInitialized = true;
         });
-        print(' CAMERA: Raspberry Pi camera detected and ready');
+        print(' CAMERA: MJPEG stream detected and ready');
       } else {
-        throw Exception('Camera not detected');
+        throw Exception('Stream returned status ${response.statusCode}');
       }
     } catch (e) {
       print(' CAMERA ERROR: $e');
+      print(' Make sure camera stream is running:');
+      print(
+          '   mjpg_streamer -i "input_raspicam.so -fps 15 -q 50 -x 640 -y 480" -o "output_http.so -p 8080"');
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Camera error: ${e.toString()}')),
+          SnackBar(
+            content: Text('Camera stream not available: ${e.toString()}'),
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     }
   }
 
   void _startRecognition(String classId) {
-    //if (!_isCameraInitialized || _cameraController == null) { //no camera controller to check anymore
     if (!_isCameraInitialized) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Camera not ready')),
@@ -160,7 +133,6 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
   }
 
   Future<void> _recognizeFace(String classId) async {
-    //if (_cameraController == null || !_cameraController!.value.isInitialized) { //no camera controller to check anymore
     if (!_isCameraInitialized) {
       print(' ATTENDANCE: Camera not initialized, skipping frame');
       return;
@@ -168,45 +140,22 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
 
     try {
       print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      print(' ATTENDANCE: Capturing frame for recognition...');
+      print(' ATTENDANCE: Capturing frame from MJPEG stream...');
 
-      //final image = await _cameraController!.takePicture();
-      //final bytes = await image.readAsBytes();
-      // Capture image using raspistill command
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final imagePath = '/tmp/capture_$timestamp.jpg';
+      // Capture snapshot from stream
+      final response = await http
+          .get(
+            Uri.parse('http://129.113.225.72:8080/?action=snapshot'),
+          )
+          .timeout(const Duration(seconds: 3));
 
-      print(' CAMERA: Capturing image to $imagePath...');
-
-      final captureResult = await Process.run('raspistill', [
-        '-o', imagePath, // Output file
-        '-w', '640', // Width
-        '-h', '480', // Height
-        '-t', '1', // Timeout 1ms (instant)
-        '-n', // No preview
-        '-q', '75', // Quality 75%
-      ]);
-
-      if (captureResult.exitCode != 0) {
-        print(' CAMERA: Capture failed - ${captureResult.stderr}');
+      if (response.statusCode != 200) {
+        print(' CAMERA: Failed to capture - status ${response.statusCode}');
         return;
       }
 
-      print(' CAMERA: Image captured successfully');
-
-      // Read the captured image
-      final imageFile = File(imagePath);
-      if (!await imageFile.exists()) {
-        print(' CAMERA: Image file not found');
-        return;
-      }
-
-      final bytes = await imageFile.readAsBytes();
-
-      // Clean up - delete temp file
-      await imageFile.delete();
-
-      print(' ATTENDANCE: Frame captured (${bytes.length} bytes)');
+      final bytes = response.bodyBytes;
+      print(' CAMERA: Frame captured (${bytes.length} bytes)');
       print(' ATTENDANCE: Sending frame to API...');
 
       final recognizedId = await FaceRecognitionAPI.recognizeFace(bytes);
@@ -376,7 +325,7 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
   @override
   void dispose() {
     _recognitionTimer?.cancel();
-    //_cameraController?.dispose();     //no camera controller to dispose
+    // _cameraController?.dispose();
     super.dispose();
   }
 
@@ -417,26 +366,39 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
                   ? Stack(
                       fit: StackFit.expand,
                       children: [
-                        //CameraPreview(_cameraController!),
-                        const Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.camera_alt,
-                                  size: 100, color: Colors.white54),
-                              SizedBox(height: 16),
-                              Text(
-                                'Pi Camera Active',
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 18),
+                        Image.network(
+                          'http://129.113.225.72:8080/?action=stream',
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stack) {
+                            return const Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.videocam_off,
+                                      color: Colors.red, size: 80),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'Camera Stream Unavailable',
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 18),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Start mjpeg-streamer on Pi',
+                                    style: TextStyle(
+                                        color: Colors.white70, fontSize: 14),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                'No preview available',
-                                style: TextStyle(
-                                    color: Colors.white70, fontSize: 14),
-                              ),
-                            ],
-                          ),
+                            );
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return const Center(
+                              child: CircularProgressIndicator(
+                                  color: Colors.white),
+                            );
+                          },
                         ),
                         if (_isRecognitionActive)
                           Positioned(
