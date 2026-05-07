@@ -19,7 +19,7 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
   final _firestore = FirebaseFirestore.instance;
 
   CameraController? _cameraController;
-  bool _isCameraInitialized = false;
+  bool _isCameraInitialized = false; // Track if camera is ready
   bool _isRecognitionActive = false;
   Timer? _recognitionTimer;
 
