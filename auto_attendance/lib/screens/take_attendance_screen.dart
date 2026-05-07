@@ -8,7 +8,7 @@ import 'dart:typed_data';
 //rest of imports
 import '../services/face_recognition_api.dart';
 
-//this is a comment to test something
+//this is a comment to test something o test
 class TakeAttendanceScreen extends StatefulWidget {
   const TakeAttendanceScreen({super.key});
 
