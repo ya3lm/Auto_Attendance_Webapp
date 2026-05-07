@@ -7,7 +7,6 @@ import 'dart:async';
 import 'dart:typed_data';
 //rest of imports
 import '../services/face_recognition_api.dart';
-import 'package:http/http.dart' as http;
 
 class TakeAttendanceScreen extends StatefulWidget {
   const TakeAttendanceScreen({super.key});
