@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  camera_desktop
   cloud_firestore
   file_selector_windows
   firebase_auth
