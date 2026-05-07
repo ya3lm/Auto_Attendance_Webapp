@@ -61,6 +61,8 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
 
       await _cameraController!.initialize();
 
+      if (!mounted) return;
+
       setState(() {
         _isCameraInitialized = true;
       });

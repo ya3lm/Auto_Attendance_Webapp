@@ -29,6 +29,7 @@ dependencies:
 
 #camera
   camera: ^0.10.5+5
+  camera_desktop: ^1.1.2
 
 #testing
 dev_dependencies:
