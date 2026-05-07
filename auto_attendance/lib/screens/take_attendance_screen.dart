@@ -55,7 +55,7 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
 
       _cameraController = CameraController(
         camera,
-        ResolutionPreset.medium,
+        ResolutionPreset.low,
         enableAudio: false,
       );
 
