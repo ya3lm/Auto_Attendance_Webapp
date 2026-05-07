@@ -8,6 +8,7 @@ import 'dart:typed_data';
 //rest of imports
 import '../services/face_recognition_api.dart';
 
+//this is a comment to test something
 class TakeAttendanceScreen extends StatefulWidget {
   const TakeAttendanceScreen({super.key});
 
@@ -19,7 +20,7 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
   final _firestore = FirebaseFirestore.instance;
 
   CameraController? _cameraController;
-  bool _isCameraInitialized = false; // Track if camera is ready
+  bool _isCameraInitialized = false;
   bool _isRecognitionActive = false;
   Timer? _recognitionTimer;
 
